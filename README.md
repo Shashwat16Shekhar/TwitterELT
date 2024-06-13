@@ -211,3 +211,10 @@ after setting up all the connections ( the normalized data as well as the OLEDB 
 <p align="center">
   <img src="./imgs/usr-data-flow.jpg" />
 </p>
+
+
+#### Modeling : 
+
+<p align="center">
+  <img src="./imgs/model.jpg" />
+</p>
