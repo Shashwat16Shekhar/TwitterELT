@@ -1,25 +1,4 @@
-# tweetsOLAPing : an end-to-end social-media data-warehousing project :
-
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
-[![Ask Me Anything !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](https://GitHub.com/Naereen/ama)
-
-i'll walk you through an execution example using light-weight (very) data to show you the results.
-
-## Table of Contents :
-- [Twitter DataTypes :](#twitter-datatypes--)
-  * [TweetDataType :](#tweetdatatype--)
-  * [UserDataType :](#userdatatype--)
-- [ENV set-up :](#0--env-set-up-)
-- [ETL pipeline :](#1--etl-pipeline--)
-  * [a) Extraction :](#a--extraction--)
-  * [b) Transformation :](#b--transformation--)
-  * [c) Loading :](#c--loading--)
-    + [SSIS modeling :](#ssis-modeling--)
-    + [SSAS cube modeling :](#ssas-cube-modeling--)
-- [Analysis :](#2-analysis--)
-  * [MDX queries :](#mdx-queries--)
-  * [powerBI report :](#powerbi-report--)
- - [References :](#3-references--)
+#tweetDataWarehouse: A Comprehensive Social Media Data Storage and Analysis Project
 
 ## Twitter DataTypes :
 
@@ -30,8 +9,8 @@ i'll walk you through an execution example using light-weight (very) data to sho
    "created_at":"Sat Jul 01 23:47:16 +0000 2017",
    "id":881298189072072708,
    "id_str":"881298189072072708",
-   "text":"seu perfil foi visto por 5 pessoas nas \u00faltimas 4 horas https:\/\/t.co\/cKb35CahC7",
-   "source":"\u003ca href=\"http:\/\/www.twitcom.com.br\" rel=\"nofollow\"\u003eTwitcom - Comunidades \u003c\/a\u003e",
+   "text":"Your profile was viewed by 5 people in the last week. \u00 last 4 hours https:\/\/t.co\/cKb35CahC7",
+   "source":"\u003ca href=\"http:\/\/www.twitcom.com.br\" rel=\"nofollow\"\u003 eTwitcom - Communities \u003c\/a\u003e",
    "truncated":false,
    "in_reply_to_status_id":null,
    "in_reply_to_status_id_str":null,
@@ -122,76 +101,57 @@ i'll walk you through an execution example using light-weight (very) data to sho
 }
 ```
 
-## 0- ENV set-up:
+## 1- ETL Pipeline:
 
-the extraction/transformation steps of the pipeline will need the following environment set-up :
-```shell
-pip install virtualenv
-```
-```shell
-virtualenv tweetsOLAPingENV
-```
-```shell
-source tweetsOLAPingENV/bin/activate
-```
-```shell
-pip install -r requirements.txt
-```
+### a) Extraction:
 
-as far as the Loading ETL step and the final analysis, make sure you have the following :
-1. MSSMS (microsoft Sql server managment studio).
-2. SSDT (Sql server data tools).
-3. SSIS (Sql server integration service).
-4. SSAS (Sql server analysis service).
-5. powerBI.
+The first step is to prepare the **tweetsPOOLs.csv** file as shown here: [tweetsPOOLs.csv](https://github.com/MohamedHmini/tweetsOLAPing/blob/master/extraction/archivedTweetsCrawler/tweetsPOOLs.csv).
 
-## 1- ETL pipeline : 
-### a) Extraction :
-
-the very first step is to prepare the <b>tweetsPOOLs.csv</b> file as in https://github.com/MohamedHmini/tweetsOLAPing/blob/master/extraction/archivedTweetsCrawler/tweetsPOOLs.csv.
-
-then we shall execute the <b>Scrapy Spider</b> to crawl the archive needed website pages as follows : 
+Next, execute the **Scrapy Spider** to crawl the required web pages as follows:
 
 ```shell
   cd extraction/archivedTweetsCrawler
   scrapy crawl -o tweetsSTREAMs.csv tweets
 ```
-after that you will get a file like the one in here : https://github.com/MohamedHmini/tweetsOLAPing/blob/master/sample-data/tweetsSTREAMs.csv
 
-the next step is to structure that CSV file into a tree like structure composed of directories and files :
+This will generate a file similar to the one here: [tweetsSTREAMs.csv](https://github.com/MohamedHmini/tweetsOLAPing/blob/master/sample-data/tweetsSTREAMs.csv).
+
+The next step is to structure this CSV file into a tree-like format composed of directories and files:
+
 ```shell
   cd extraction/
   python tweetsPOOLsParser.py tweetsSTREAMs.csv ../root_urls/
 ```
-the output will be somewhat like this (light-weight) example : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/urls_root
 
-next we have to perform a random selection to select only some URLs and not all, note that each URL will bring you up to 5000 tweets :
+The output will be something like this lightweight example: [urls_root](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/urls_root).
+
+Next, perform a random selection to choose only some URLs. Note that each URL can provide up to 5000 tweets:
 
 ```shell
   cd extraction/
   python urlsRandomSelector.py ../root_urls/ ../chosen_urls.txt 700
 ```
 
-again check this link for an output example : https://github.com/MohamedHmini/tweetsOLAPing/blob/master/sample-data/chosen_urls.txt
+Check this link for an output example: [chosen_urls.txt](https://github.com/MohamedHmini/tweetsOLAPing/blob/master/sample-data/chosen_urls.txt).
 
-now after that we have all the needed URLs in a single file we can start downloading :
+Once we have all the required URLs in a single file, we can start downloading:
 
 ```shell
   cd extraction/
   python tweetsDownloader.py ../chosen_urls.txt ../downloaded_pools/ ../download_error.txt
 ```
 
-again check this link for an output example : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/downloaded-pools
+Check this link for an output example: [downloaded-pools](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/downloaded-pools).
 
-after we downloaded the files you will notice that they are compressed with a .bz2 file extension thus you have to decompress them somehow, i won't provide a solution in this stage.
+After downloading, you will notice the files are compressed with a .bz2 extension. You will need to decompress them. I do not provide a solution for this at this stage.
 
-again check this link for an output example : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/decompressed-pools
+Check this link for an output example: [decompressed-pools](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/decompressed-pools).
 
-note that i provide a script to lookup tweets from the twitterAPI directly using the downloaded tweets IDs, cause the tweets have been pulled in the stream by the collected you will find that most of them has zero metrics, i solve this solution using a context-aware random generator.
+Note that I provide a script to lookup tweets from the Twitter API directly using the downloaded tweet IDs. Since the tweets have been collected in the stream, most of them have zero metrics. I address this issue using a context-aware random generator.
 
-### b) Transformation :
+### b) Transformation:
 
-as for the transformation it's composed of two parts, first we transform our data from JSON to CSV and create all the needed derived attributes, also we shall remove twitto duplicates using, beware that the cleanUsersCSV.py script will using multi-threading to speed-up the I/O operations and the result will be stored in a directory, you can then merge them on your own.
+The transformation stage consists of two parts. First, we convert our data from JSON to CSV and create all the necessary derived attributes. We will also remove duplicate users. Note that the cleanUsersCSV.py script uses multi-threading to speed up I/O operations, and the results will be stored in a directory. You can then merge them as needed.
 
 ```shell
   cd transformation/
@@ -199,29 +159,29 @@ as for the transformation it's composed of two parts, first we transform our dat
   python cleanUsersCSV.py ../twittos.csv ../twittos
 ```
 
-the second part consists of performing NLP analysis on the tweets to generate the sentiment-score and the content-classification, you have to provide the projectkey.json file from google NLP APIin the same directory.
+The second part involves performing NLP analysis on the tweets to generate sentiment scores and content classification. You need to provide the projectkey.json file from Google NLP API in the same directory.
 
 ```shell
   cd transformation/
   python performNLPanalysis.py ../decompressed_pools/ ../tweets_sentiments.csv ../sent-err.txt
 ```
 
-again check this link for an output example : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/processed
+Check this link for an output example: [processed](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/processed).
 
-### c) Loading :
+### c) Loading:
 
-before starting the SSIS process you have to provide a normalized data in the right path (shall be fixed) :
+Before starting the SSIS process, you need to provide normalized data in the correct path (this path should be fixed):
 
 ```shell
   cd loading/
   python dataNormalization.py ../twittos.csv ../tweets.csv ../data/normalized
 ```
 
-again check this link for an output example : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/normalized-data
+Check this link for an output example: [normalized-data](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/sample-data/normalized-data).
 
-for SSIS logic i provide the full model : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/loading/tweetsOLAPing_loading
+For SSIS logic, I provide the full model: [tweetsOLAPing_loading](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/loading/tweetsOLAPing_loading).
 
-as well as the SSAS logic is fully provided : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/analysis/tweetsOLAPing_analysis
+The SSAS logic is also fully provided: [tweetsOLAPing_analysis](https://github.com/MohamedHmini/tweetsOLAPing/tree/master/analysis/tweetsOLAPing_analysis).
 
 #### SSIS modeling : 
 
@@ -251,85 +211,3 @@ after setting up all the connections ( the normalized data as well as the OLEDB 
 <p align="center">
   <img src="./imgs/usr-data-flow.jpg" />
 </p>
-
-#### SSAS cube modeling : 
-
-<p align="center">
-  <img src="./imgs/model.jpg" />
-</p>
-
-## 2. Analysis :
-
-### MDX queries : 
-
-```sql
-SELECT 
-  NON EMPTY
-  (
-    [Twitto Meta Data].[User Category].children, 
-    [Measures].[Retweet Count]
-  ) ON COLUMNS,
-  NON EMPTY 
-  (
-    [Twitto Meta Data].[User Activity].children
-  ) ON ROWS
-FROM
-  [TweetsOLAPing_cube]
-```
-
-```sql
-SELECT 
-  NON EMPTY
-  (
-    [Twitto Meta Data].[User Category].children, 
-    [Measures].[Retweet Count]
-  ) ON COLUMNS,
-  NON EMPTY 
-  (
-    [Twitto Meta Data].[User Activity].children, 
-    [Tweet Meta Data].[Sentiment Tag].children
-  ) ON ROWS
-FROM
-  [TweetsOLAPing_cube]
-```
-
-```sql
-SELECT 
-  NON EMPTY
-  (
-    [Tweet Meta Data].[Media Type].children, 
-    [Measures].[Retweet Count]
-  ) ON COLUMNS,
-  NON EMPTY 
-  (
-    [Tweet Meta Data].[Has Hashtags].children, 
-    [Date].[Weekday].children
-  ) ON ROWS
-FROM
-  [TweetsOLAPing_cube]
-```
-
-### powerBI report :
-
-the final report is provided in : https://github.com/MohamedHmini/tweetsOLAPing/tree/master/analysis/powerBI
-
-here are some examples :
-
-![alt text](analysis-example/analysis1.gif)
-![alt text](analysis-example/analysis2.gif)
-![alt text](analysis-example/analysis3.gif)
-![alt text](analysis-example/analysis4.gif)
-![alt text](analysis-example/analysis5.gif)
-
-
-## references : 
-
-[1] Maha Ben Kraiem, Jamel Feki, Ka¨ıs Khrouf, Franck Ravat, Olivier Teste. OLAP of the tweets: From modeling to exploitation. IEEE International Conference on Research Challenges in Information Science, Marrakesh, Morocco, May 2014.
-
-[2] Maha Ben Kraiem, Jamel Feki, Ka¨ıs Khrouf, Franck Ravat, Olivier Teste. OLAP4Tweets: Multidimensional Modeling of tweets. 19th East-European Conference on Advances in Databases and Information Systems, Poitiers, France, September 2015.
-
-[3] Nafees Ur Rehman, Svetlana Mansmann, Andreas Weiler, Marc H. Scholl. Building a DataWarehouse for Twitter Stream Exploration. IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining, Istanbul, turkey, August 2012.
-
-
-
-<b> MOHAMED-HMINI 2020</b>
